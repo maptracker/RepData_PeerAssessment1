@@ -5,18 +5,79 @@ output:
     keep_md: true
 ---
 
+```R
+## Basic libraries:
+library('ggplot2')
+```
 
 ## Loading and preprocessing the data
 
+```R
+input <- "activity.csv"
+iCls  <- c("integer", "character", "integer")
+data  <- read.csv( file = input, stringsAsFactors = FALSE,
+    colClasses = iCls)
+data$date <- as.Date( data$date )
 
+## Fix the goofy intervals. They jump by 100 instead of 60
+data$minutes <- vapply( data$interval, function(x) {
+    hr = as.integer(x / 100)
+    min = x - hr * 100
+    hr * 60 + min
+}, 0)
+data$time <- vapply( data$interval, function(x) {
+    hr = as.integer(x / 100)
+    min = x - hr * 100
+    sprintf("%d:%02d", hr, min)
+}, "")
+```
 
 ## What is mean total number of steps taken per day?
 
+```R
+## ggplot will automatically aggregate for us. But this makes the mean
+## easier. I think.
+stepsByDay <- aggregate( steps ~ date, data, sum )
+stepsByDay$DayType <- ifelse(weekdays(stepsByDay$date) %in% c("Saturday", "Sunday"),
+    "Weekend", "Weekday")
+weekend <- "red"
+weekday <- "blue"
+p <- ggplot(stepsByDay, aes(date)) +
+    geom_bar( aes(weight = steps, fill = DayType )) +
+    labs(x = "Date", y = "Total Number of Steps")
+p + theme(legend.position = c(0.1,0.9))
 
+summary(stepsByDay$steps, na.rm = TRUE)
+```
 
 ## What is the average daily activity pattern?
 
+```R
+stepsByInterval <- aggregate( steps ~ minutes + time + intervals, data, mean )
+stepsByInterval$Hour <- vapply( stepsByInterval$minutes, function(x) {
+   ifelse(x %% 60, "", as.character(x / 60)) }, "")
 
+## Put in bars on the background to highlight hours
+colorHours <- rep(c("red","green", "blue","yellow"), 6)
+## Increase the transparency so the bars are not so stark
+transCH <- rgb(t(col2rgb(colorHours)), alpha = 40, maxColorValue = 255)
+
+p <- ggplot(stepsByInterval, aes(x = minutes, y = steps)) +
+    annotation_raster( matrix(transCH, nrow = 1), 0, max(stepsByInterval$minutes), -Inf, Inf) +
+    geom_line( )  +
+    labs(x = "Five Minute Interval\nColored bars mark off hours",
+        y = "Average Number of Steps")
+## Add in the 24 hour labels
+p  + geom_text(label = stepsByInterval$Hour, y = 150)
+
+## Find the time that the most steps occurs at
+with( stepsByInterval, {
+    maxInd  <<- which.max(steps) 
+    maxTime <<- time[ maxInd ]
+    maxInt  <<- interval[ maxInd ]
+} )
+
+```
 
 ## Imputing missing values
 

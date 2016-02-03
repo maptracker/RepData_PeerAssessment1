@@ -1,0 +1,12 @@
+# emacs temporary files
+*~
+\#*#
+.#*
+.RData
+.Rhistory
+
+stdout
+
+repdata_data_activity.zip
+activity.csv
+
