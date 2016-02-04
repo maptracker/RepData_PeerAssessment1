@@ -1,23 +1,9 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+### I use emacs' ESS mode for editting, and it's a pain to work on
+### .Rmd files (they are focused on Markdown, not R). This is just the
+### R code cleanly separated for ease of editting and cut-and-paste
+### testing.
 
-```R
-## Basic libraries:
-library('ggplot2')
-```
 
-## Loading and preprocessing the data
-
-The input data are not included in this directory in the interest of
-saving planetary resources. You may
-[find the zip file here][SourceData]. If you want to play with the raw
-R code, it is segregated in [its own file](./PA1_template.R)
-
-```R
 input <- "activity.csv"
 iCls  <- c("integer", "character", "integer")
 data  <- read.csv( file = input, stringsAsFactors = FALSE,
@@ -42,11 +28,12 @@ data$DayType <- factor(ifelse(weekdays(data$date) %in%
                               c("Saturday", "Sunday"),
                               "Weekend", "Weekday"),
                        levels = c("Weekday","Weekend" ))
-```
 
-## What is mean total number of steps taken per day?
 
-```R
+
+
+
+
 ## ggplot can automatically aggregate for us. But this makes
 ## computing the mean easier. I think.
 stepsByDay <- aggregate( steps ~ date + DayType, data, sum )
@@ -58,11 +45,12 @@ p + theme(legend.position = c(0.1,0.9))
 datSum <- summary(stepsByDay$steps, na.rm = TRUE)
 
 sprintf("Average steps = %d, median = %d", datSum["Mean"], datSum["Median"])
-```
 
-## What is the average daily activity pattern?
 
-```R
+
+
+
+
 stepsByInterval <- aggregate( steps ~ minutes + time + interval,
                              data, mean, na.rm = TRUE )
 ## Hourly markers for labels
@@ -97,15 +85,10 @@ p  + geom_text(label = stepsByInterval$Hour, y = -5 ) +
                y = stepsByInterval$steps[maxInd] + 5 )
 
 sprintf("Maximum steps occur at interval %d, at %s", maxInt, maxTime)
-```
 
-Our protagonist is getting insufficient sleep, roughly 6 hours. S/he
-is most active in the morning between 5:30-9:30am, before settling
-into modest activity until 7pm, and bed time between 10 and midnight.
 
-## Imputing missing values
 
-```R
+
 ## We will use the mean broken out by weekend/weekday and interval to
 ## fill in missing values:
 imputationAggregation <-
@@ -132,11 +115,11 @@ for (i in 1:nrow(imputed)) {
 sprintf("%d rows had missing data, imputation has added values for %d rows",
         sum(!complete.cases(imputed)),
         sum(complete.cases(imputed)) - sum(complete.cases(data)))
-```
 
-#### Filling out imputed values
 
-```R
+
+
+
 impByDay <- aggregate( steps ~ date + DayType, imputed, sum )
 p <- ggplot(impByDay, aes(date)) +
     geom_bar( aes(weight = steps, fill = DayType )) +
@@ -151,29 +134,19 @@ impSum <- summary(impByDay$steps, na.rm = TRUE)
 sprintf("Average steps = %d (%+d), median = %d (%+d)",
         impSum["Mean"], impSum["Mean"] - datSum["Mean"],
         impSum["Median"], impSum["Median"] - datSum["Median"])
-```
 
-#### Specific changes due to imputation
 
-```R
+
 ## Directly compare the two plots. We need to turn the NAs into zeros:
 dInds <- 1:length(data$steps)
 repInds <- dInds[ is.na(data$steps) ]
 plot(x = data$date, y = log10(imputed$steps -
                               replace(data$steps, repInds, 0)+1),
      xlab = "Date", ylab = "Steps Added by Imputation (log10)")
-```
 
-## Are there differences in activity patterns between weekdays and weekends?
 
-Our subject sleeps in longer on the weekend, waking sometime between
-5-8am. The lurry of morning activity is comperable to a weekday, but
-they are much more active during the course of the day. There is a
-conserved noon-time spike, presumably for lunch, but three additional
-periods of activity from 10-12, 1-3pm, and 3-6pm. Additionally, there
-is a late night spike in activity from 8-10pm.
 
-```R
+
 ## We'll use the imputed values for this:
 stepsByIntType <- aggregate( steps ~ minutes + DayType,
                              imputed, mean, na.rm = TRUE )
@@ -193,7 +166,4 @@ p <- ggplot(stepsByIntType, aes(x = minutes, y = steps)) +
 
 ## Add in the 24 hour labels and the time at max steps
 p  + geom_text(label = stepsByIntType$Hour, y = -5 )
-```
 
-
-[SourceData]: https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip
