@@ -6,7 +6,8 @@ saving planetary resources. You may
 R code, it is segregated in [its own file](./PA1_template.R)
 
 
-```{r}
+
+```r
 ## Basic libraries:
 library('ggplot2')
 library(hash)
@@ -21,7 +22,8 @@ between hours an minutes more clear, but it does horrible things to
 plots (40 minute discontinuities). I have added the `$minutes` field
 to correctly capture the time axis.
 
-```{r}
+
+```r
 input <- "activity.csv"
 iCls  <- c("integer", "character", "integer")
 data  <- read.csv( file = input, stringsAsFactors = FALSE,
@@ -50,7 +52,8 @@ data$DayType <- factor(ifelse(weekdays(data$date) %in%
 
 ## What is mean total number of steps taken per day?
 
-```{r}
+
+```r
 ## ggplot can automatically aggregate for us. But this makes
 ## computing the mean easier. I think.
 stepsByDay <- aggregate( steps ~ date + DayType, data, sum )
@@ -58,17 +61,22 @@ p <- ggplot(stepsByDay, aes(date)) +
     geom_bar( aes(weight = steps, fill = DayType )) +
     labs(x = "Date", y = "Total Number of Steps")
 p + theme(legend.position = c(0.1,0.9))
+```
 
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-1.png)
+
+```r
 datSum <- summary(stepsByDay$steps, na.rm = TRUE)
 ```
 
-On average, `r datSum["Mean"]` steps are taken each day, with a median
-of `r datSum["Median"]`.
+On average, 1.077 &times; 10<sup>4</sup> steps are taken each day, with a median
+of 1.076 &times; 10<sup>4</sup>.
 
 
 ## What is the average daily activity pattern?
 
-```{r}
+
+```r
 stepsByInterval <- aggregate( steps ~ minutes + time + interval,
                              data, mean, na.rm = TRUE )
 ## Hourly markers for labels
@@ -103,9 +111,11 @@ p  + geom_text(label = stepsByInterval$Hour, y = -5 ) +
                y = stepsByInterval$steps[maxInd] + 5 )
 ```
 
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png)
+
 Our protagonist is getting insufficient sleep, roughly 6 hours. S/he
 is most active in the morning between 5:30-9:30am. Maximum steps occur
-at interval `r maxInt` (`r maxTime`). After the morning spike, s/he
+at interval 835 (8:35). After the morning spike, s/he
 settles into modest activity until 7pm, and goes to bed sometime
 between 10 and midnight.
 
@@ -116,7 +126,8 @@ vs. weekend. These averages are then stored in a hash structure for
 efficient (I hope) lookup and substitution in the original data
 structure.
 
-```{r}
+
+```r
 imputationAggregation <-
     aggregate( steps ~ DayType + interval, data, mean, na.rm = TRUE )
 
@@ -136,38 +147,42 @@ for (i in 1:nrow(imputed)) {
         imputationLookup[[ paste(imputed$DayType[i],
                                  imputed$interval[i]) ]]
 }
-
 ```
 
-`r sum(!complete.cases(data))` rows had missing data. After
-imputation, `r sum(complete.cases(imputed)) -
-sum(complete.cases(data))` incomplete rows were imputed, leaving
-`r sum(!complete.cases(imputed))` rows with `NA` values.
+2304 rows had missing data. After
+imputation, 2304 incomplete rows were imputed, leaving
+0 rows with `NA` values.
 
 #### Filling out imputed values
 
-```{r}
+
+```r
 impByDay <- aggregate( steps ~ date + DayType, imputed, sum )
 p <- ggplot(impByDay, aes(date)) +
     geom_bar( aes(weight = steps, fill = DayType )) +
     labs(x = "Date", y = "Total Number of Steps",
          main = "Steps by day, using imputed data")
 p + theme(legend.position = c(0.1,0.9))
+```
 
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png)
+
+```r
 impSum <- summary(impByDay$steps, na.rm = TRUE)
 ```
 
-Following imputation, on average, `r impSum["Mean"]` steps are taken
-each day (change of `r impSum["Mean"] - datSum["Mean"]`), with a
-median of `r impSum["Median"]` (change of
-`r impSum["Median"] - datSum["Median"]`)
+Following imputation, on average, 1.076 &times; 10<sup>4</sup> steps are taken
+each day (change of -10), with a
+median of 1.057 &times; 10<sup>4</sup> (change of
+-190)
 
 
 #### Specific changes due to imputation
 
 Graphical view of imputed step values, organized by date
 
-```{r}
+
+```r
 ## Directly compare the two plots. We need to turn the NAs into zeros:
 dInds <- 1:length(data$steps)
 repInds <- dInds[ is.na(data$steps) ]
@@ -176,9 +191,12 @@ plot(x = data$date, y = log10(imputed$steps -
      xlab = "Date", ylab = "Steps Added by Imputation (log10)")
 ```
 
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png)
+
 ## Are there differences in activity patterns between weekdays and weekends?
 
-```{r}
+
+```r
 ## We'll use the imputed values for this:
 stepsByIntType <- aggregate( steps ~ minutes + DayType,
                              imputed, mean, na.rm = TRUE )
@@ -207,9 +225,7 @@ conserved noon-time spike, presumably for lunch, but three additional
 periods of activity from 10-12, 1-3pm, and 3-6pm. Additionally, there
 is a late night weekend spike in activity from 8-10pm.
 
-```{r, echo = FALSE}
-p
-```
+![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9-1.png)
 
 
 [SourceData]: https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip
